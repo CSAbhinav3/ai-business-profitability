@@ -8,6 +8,11 @@ app = FastAPI()
 class InputData(BaseModel):
     revenue: float
     cost: float
+    target_profit: float
+    target_months: int
+    current_cash: float
+
+
 
 # Step 3: Create /predict_profit endpoint
 @app.post("/predict_profit")
@@ -27,9 +32,35 @@ def predict_profit(data: InputData):
     else:
         health_score = 40
 
+    # Goal Planner Logic
+    growth_rate_per_month = 0.05  # Assuming 5% monthly profit growth (5%)
+
+    expected_profit = profit
+
+    for _ in range(data.target_months):
+        expected_profit *= (1 + growth_rate_per_month)
+
+    if expected_profit >= data.target_profit:
+        goal_achievable = True
+    else:
+        goal_achievable = False
+
+    # Cash Burn Warning Logic
+    burn_rate = data.cost - data.revenue
+
+    if burn_rate > 0:
+        months_until_cashout = data.current_cash / burn_rate
+        cash_burn_warning = f"Warning: You will run out of cash in {months_until_cashout:.1f} months."
+    else:
+        months_until_cashout = None
+        cash_burn_warning = "No burn: You are in profit or break-even."
+
     return {
         "profit": profit,
         "profit_percentage": profit_percentage,
         "breakeven_status": breakeven_status,
-        "health_score": health_score
-    }
+        "health_score": health_score,
+        "goal_achievable": goal_achievable,
+        "cash_burn_warning": cash_burn_warning
+}
+
