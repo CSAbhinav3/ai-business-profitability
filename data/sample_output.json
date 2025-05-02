@@ -1,0 +1,9 @@
+{
+    "profit": 30000,
+    "profit_percentage": 30.0,
+    "breakeven_status": "Profit",
+    "health_score": 90,
+    "goal_achievable": true,
+    "cash_burn_warning": "No burn: You are in profit or break-even."
+  }
+  
