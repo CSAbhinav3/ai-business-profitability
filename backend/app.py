@@ -1,28 +1,46 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from joblib import load
+import pandas as pd
 
-# Step 1: Create FastAPI app
 app = FastAPI()
 
-# Step 2: Create input model
+# Load the trained Kaggle model
+model = load("model/profit_model.pkl")  
+
+# Input model: includes ML inputs + business logic inputs
 class InputData(BaseModel):
+    rd_spend: float
+    administration: float
+    marketing_spend: float
     revenue: float
     cost: float
     target_profit: float
     target_months: int
     current_cash: float
 
+@app.post("/analyze_business")
+def analyze_business(data: InputData):
+    # ML Prediction
+    input_df = pd.DataFrame([{
+        "R&D Spend": data.rd_spend,
+        "Administration": data.administration,
+        "Marketing Spend": data.marketing_spend
+    }])
+    predicted_profit = model.predict(input_df)[0]
 
+    # Profit percentage
+    profit_percentage = (predicted_profit / data.revenue) * 100 if data.revenue != 0 else 0
 
-# Step 3: Create /predict_profit endpoint
-@app.post("/predict_profit")
-def predict_profit(data: InputData):
-    # Basic Profit Calculations
-    profit = data.revenue - data.cost
-    profit_percentage = (profit / data.revenue) * 100 if data.revenue != 0 else 0
-    breakeven_status = "Profit" if profit > 0 else "Loss" if profit < 0 else "Break-even"
+    # Breakeven status
+    if predicted_profit > 0:
+        breakeven_status = "Profit"
+    elif predicted_profit < 0:
+        breakeven_status = "Loss"
+    else:
+        breakeven_status = "Break-even"
 
-    # Business Health Score Calculation
+    # Health score (simple logic)
     if profit_percentage >= 30:
         health_score = 90
     elif profit_percentage >= 20:
@@ -32,35 +50,27 @@ def predict_profit(data: InputData):
     else:
         health_score = 40
 
-    # Goal Planner Logic
-    growth_rate_per_month = 0.05  # Assuming 5% monthly profit growth (5%)
-
-    expected_profit = profit
-
+    # Goal planner
+    growth_rate = 0.05  # 5% per month
+    future_profit = predicted_profit
     for _ in range(data.target_months):
-        expected_profit *= (1 + growth_rate_per_month)
+        future_profit *= (1 + growth_rate)
 
-    if expected_profit >= data.target_profit:
-        goal_achievable = True
-    else:
-        goal_achievable = False
+    goal_achievable = future_profit >= data.target_profit
 
-    # Cash Burn Warning Logic
+    # Burn rate logic
     burn_rate = data.cost - data.revenue
-
     if burn_rate > 0:
         months_until_cashout = data.current_cash / burn_rate
         cash_burn_warning = f"Warning: You will run out of cash in {months_until_cashout:.1f} months."
     else:
-        months_until_cashout = None
         cash_burn_warning = "No burn: You are in profit or break-even."
 
     return {
-        "profit": profit,
-        "profit_percentage": profit_percentage,
+        "predicted_profit": round(predicted_profit, 2),
+        "profit_percentage": round(profit_percentage, 2),
         "breakeven_status": breakeven_status,
         "health_score": health_score,
         "goal_achievable": goal_achievable,
         "cash_burn_warning": cash_burn_warning
-}
-
+    }
