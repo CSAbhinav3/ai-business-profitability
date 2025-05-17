@@ -5,7 +5,7 @@ from sklearn.metrics import mean_squared_error
 from joblib import dump
 
 # Step 1: Load CSV
-df = pd.read_csv("data/1000_Companies.csv")
+df = pd.read_csv("../data/1000_Companies.csv")
 
 # Step 2: Drop non-numeric column
 df.drop(columns=["State"], inplace=True)
@@ -30,5 +30,5 @@ mse = mean_squared_error(y_test, predictions)
 print(f"Model trained. MSE: {mse:.2f}")
 
 # Step 8: Save model
-dump(model, "backend/model/profit_model.pkl")
+dump(model, "model/profit_model.pkl")
 print("Model saved to backend/model/profit_model.pkl")

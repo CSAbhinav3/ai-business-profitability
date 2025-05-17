@@ -27,7 +27,7 @@ def analyze_business(data: InputData):
         "Administration": data.administration,
         "Marketing Spend": data.marketing_spend
     }])
-    predicted_profit = model.predict(input_df)[0]
+    predicted_profit = float(model.predict(input_df)[0])
 
     # Profit percentage
     profit_percentage = (predicted_profit / data.revenue) * 100 if data.revenue != 0 else 0
@@ -56,7 +56,7 @@ def analyze_business(data: InputData):
     for _ in range(data.target_months):
         future_profit *= (1 + growth_rate)
 
-    goal_achievable = future_profit >= data.target_profit
+    goal_achievable = bool(future_profit >= data.target_profit)
 
     # Burn rate logic
     burn_rate = data.cost - data.revenue
