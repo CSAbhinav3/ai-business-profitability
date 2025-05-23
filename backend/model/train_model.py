@@ -1,11 +1,12 @@
 import pandas as pd
-from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from joblib import dump
+import os
 
 # Step 1: Load CSV
-df = pd.read_csv("../data/1000_Companies.csv")
+df = pd.read_csv("data/1000_Companies.csv")  # relative to root project folder
 
 # Step 2: Drop non-numeric column
 df.drop(columns=["State"], inplace=True)
@@ -21,7 +22,7 @@ y = df["Profit"]                 # target
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Step 6: Train model
-model = LinearRegression()
+model = RandomForestRegressor(n_estimators=100, random_state=42)
 model.fit(X_train, y_train)
 
 # Step 7: Evaluate
@@ -30,5 +31,6 @@ mse = mean_squared_error(y_test, predictions)
 print(f"Model trained. MSE: {mse:.2f}")
 
 # Step 8: Save model
-dump(model, "model/profit_model.pkl")
+os.makedirs("backend/model", exist_ok=True)  # Ensure the folder exists
+dump(model, "backend/model/profit_model.pkl")
 print("Model saved to backend/model/profit_model.pkl")
