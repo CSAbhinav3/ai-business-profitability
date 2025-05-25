@@ -66,11 +66,21 @@ def analyze_business(data: InputData):
     else:
         cash_burn_warning = "No burn: You are in profit or break-even."
 
+    # Calculate feature importances
+    importances = model.feature_importances_
+    with open("backend/model/feature_names.txt", "r") as f:
+        feature_names = f.read().split(",")
+
+    feature_importance_dict = dict(zip(feature_names, importances))
+    sorted_importance = dict(sorted(feature_importance_dict.items(), key=lambda x: x[1], reverse=True))
+
+
     return {
         "predicted_profit": round(predicted_profit, 2),
         "profit_percentage": round(profit_percentage, 2),
         "breakeven_status": breakeven_status,
         "health_score": health_score,
         "goal_achievable": goal_achievable,
-        "cash_burn_warning": cash_burn_warning
+        "cash_burn_warning": cash_burn_warning,
+        "feature_importance": sorted_importance 
     }

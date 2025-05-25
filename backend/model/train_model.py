@@ -34,3 +34,8 @@ print(f"Model trained. MSE: {mse:.2f}")
 os.makedirs("backend/model", exist_ok=True)  # Ensure the folder exists
 dump(model, "backend/model/profit_model.pkl")
 print("Model saved to backend/model/profit_model.pkl")
+
+# Save feature names separately (optional but helpful)
+with open("backend/model/feature_names.txt", "w") as f:
+    f.write(",".join(X.columns))
+
