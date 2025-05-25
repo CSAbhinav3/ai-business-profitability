@@ -1,8 +1,13 @@
 {
-  "predicted_profit": 191792.1,
-  "profit_percentage": 19.18,
+  "predicted_profit": 163750.04,
+  "profit_percentage": 16.38,
   "breakeven_status": "Profit",
-  "health_score": 75,
+  "health_score": 60,
   "goal_achievable": false,
-  "cash_burn_warning": "No burn: You are in profit or break-even."
+  "cash_burn_warning": "No burn: You are in profit or break-even.",
+  "feature_importance": {
+    "R&D Spend": 0.78,
+    "Marketing Spend": 0.14,
+    "Administration": 0.08
+  }
 }
