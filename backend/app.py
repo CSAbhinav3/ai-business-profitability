@@ -2,6 +2,10 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from joblib import load
 import pandas as pd
+import os
+
+model_path = os.path.join(os.path.dirname(__file__), "model", "profit_model.pkl")
+model = load(model_path)
 
 app = FastAPI()
 
