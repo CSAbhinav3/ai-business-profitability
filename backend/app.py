@@ -4,13 +4,12 @@ from joblib import load
 import pandas as pd
 import os
 
+# Load the trained Kaggle model
+
 model_path = os.path.join(os.path.dirname(__file__), "model", "profit_model.pkl")
 model = load(model_path)
 
 app = FastAPI()
-
-# Load the trained Kaggle model
-model = load("model/profit_model.pkl")  
 
 # Input model: includes ML inputs + business logic inputs
 class InputData(BaseModel):
