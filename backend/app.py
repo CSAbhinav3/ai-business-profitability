@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from joblib import load
 import pandas as pd
 import os
-from logs.log_predictions_csv import log_prediction
+from .logs.log_predictions_csv import log_prediction
 
 # Get base directory of this script
 base_dir = os.path.dirname(__file__)
