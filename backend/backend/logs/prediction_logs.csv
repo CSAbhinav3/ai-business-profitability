@@ -1,0 +1,2 @@
+timestamp,rd_spend,administration,marketing_spend,revenue,cost,target_profit,target_months,current_cash,predicted_profit,profit_percentage,breakeven_status,health_score,goal_achievable,cash_burn_warning
+2025-05-31T13:39:52.005028,150000.0,120000.0,300000.0,1000000.0,800000.0,250000.0,6,300000.0,168892.66,16.89,Profit,60,False,No burn: You are in profit or break-even.

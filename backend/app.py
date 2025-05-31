@@ -3,15 +3,20 @@ from pydantic import BaseModel
 from joblib import load
 import pandas as pd
 import os
+from logs.log_predictions_csv import log_prediction
 
-# Load the trained Kaggle model
+# Get base directory of this script
+base_dir = os.path.dirname(__file__)
 
-model_path = os.path.join(os.path.dirname(__file__), "model", "profit_model.pkl")
-model = load(model_path)
+# Load model and feature names safely using full paths
+model = load(os.path.join(base_dir, "model", "profit_model.pkl"))
+
+with open(os.path.join(base_dir, "model", "feature_names.txt"), "r") as f:
+    feature_names = f.read().split(",")
 
 app = FastAPI()
 
-# Input model: includes ML inputs + business logic inputs
+# Input schema
 class InputData(BaseModel):
     rd_spend: float
     administration: float
@@ -24,7 +29,8 @@ class InputData(BaseModel):
 
 @app.post("/analyze_business")
 def analyze_business(data: InputData):
-    # ML Prediction
+    print("🚀 Endpoint hit!")
+    # Predict profit
     input_df = pd.DataFrame([{
         "R&D Spend": data.rd_spend,
         "Administration": data.administration,
@@ -33,7 +39,7 @@ def analyze_business(data: InputData):
     predicted_profit = float(model.predict(input_df)[0])
 
     # Profit percentage
-    profit_percentage = (predicted_profit / data.revenue) * 100 if data.revenue != 0 else 0
+    profit_percentage = (predicted_profit / data.revenue) * 100 if data.revenue else 0
 
     # Breakeven status
     if predicted_profit > 0:
@@ -43,7 +49,7 @@ def analyze_business(data: InputData):
     else:
         breakeven_status = "Break-even"
 
-    # Health score (simple logic)
+    # Health score
     if profit_percentage >= 30:
         health_score = 90
     elif profit_percentage >= 20:
@@ -53,37 +59,33 @@ def analyze_business(data: InputData):
     else:
         health_score = 40
 
-    # Goal planner
-    growth_rate = 0.05  # 5% per month
+    # Goal planning
     future_profit = predicted_profit
     for _ in range(data.target_months):
-        future_profit *= (1 + growth_rate)
+        future_profit *= 1.05  # 5% growth per month
 
-    goal_achievable = bool(future_profit >= data.target_profit)
+    goal_achievable = future_profit >= data.target_profit
 
-    # Burn rate logic
+    # Burn rate analysis
     burn_rate = data.cost - data.revenue
-    if burn_rate > 0:
-        months_until_cashout = data.current_cash / burn_rate
-        cash_burn_warning = f"Warning: You will run out of cash in {months_until_cashout:.1f} months."
-    else:
-        cash_burn_warning = "No burn: You are in profit or break-even."
+    cash_burn_warning = (
+        f"Warning: You will run out of cash in {data.current_cash / burn_rate:.1f} months."
+        if burn_rate > 0 else "No burn: You are in profit or break-even."
+    )
 
-    # Calculate feature importances
+    # Feature importance
     importances = model.feature_importances_
-    with open("backend/model/feature_names.txt", "r") as f:
-        feature_names = f.read().split(",")
+    sorted_importance = dict(sorted(zip(feature_names, importances), key=lambda x: x[1], reverse=True))
 
-    feature_importance_dict = dict(zip(feature_names, importances))
-    sorted_importance = dict(sorted(feature_importance_dict.items(), key=lambda x: x[1], reverse=True))
-
-
-    return {
+    result = {
         "predicted_profit": round(predicted_profit, 2),
         "profit_percentage": round(profit_percentage, 2),
         "breakeven_status": breakeven_status,
         "health_score": health_score,
         "goal_achievable": goal_achievable,
         "cash_burn_warning": cash_burn_warning,
-        "feature_importance": sorted_importance 
+        "feature_importance": sorted_importance
     }
+
+    log_prediction(data, result)
+    return result
