@@ -12,3 +12,4 @@
 +import { BusinessInput, BusinessAnalysis } from './types';
 
  function App() {
+ }
